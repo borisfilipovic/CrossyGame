@@ -23,6 +23,7 @@ public class PlayerCharacterScript : MonoBehaviour {
     public List<GameObject> strips;
     public float movingSpeed = 10.0f;
     public float jumpHeightIncrement = 0.0f;
+    public GameObject[] poolOfStripsPrefabs;
 
     // Private properties.
     private bool isJumping;
@@ -71,17 +72,41 @@ public class PlayerCharacterScript : MonoBehaviour {
         currentIndex += 1;
 
         // Check index out of bound.
-       /* if (strips.count <= currentIndex) {
+       if (strips.Count <= currentIndex) {
             print("Index is out of bound. Current selected Index: " + currentIndex);
             isJumping = false; // Reset isJumping flag.
             return;
         }
-        */
+ 
         // Get strip at the current index.
         GameObject nextStrip = strips[currentIndex] as GameObject;
 
         // Get x position of next strip.
         jumpTargetLocation = new Vector3(nextStrip.transform.position.x - jumpOffsetX, nextStrip.transform.position.y, transform.position.z);
         midwayPointX = jumpTargetLocation.x + ((transform.position.x - jumpTargetLocation.x) * 0.5f);
+
+        // Instantiate new strip right after the last strip.
+        SpawnNewStrip();
+    }
+
+    // Instantiate new strip.
+    private void SpawnNewStrip() {
+        // Create random number.
+        int stripsPrefabCount = poolOfStripsPrefabs.Length;
+        int randomNumber = Random.Range(0, stripsPrefabCount);
+
+        // Create new strip.
+        GameObject item = poolOfStripsPrefabs[randomNumber] as GameObject; // Randomly select type of new strip.
+        GameObject lastStrip = strips[strips.Count - 1] as GameObject; // Get last strip so we can calculate location for new strip.
+        GameObject newStrip = Instantiate(item, lastStrip.transform.position, lastStrip.transform.rotation); // Instantiate new strip.
+
+        // Set new strip position.
+        Transform itemChildTransform = item.transform.GetChild(0) as Transform;
+        Transform itemChildOfChildTransform = itemChildTransform.GetChild(0) as Transform;
+        float itemWidth = itemChildOfChildTransform.gameObject.GetComponent<Renderer>().bounds.size.x; // Use renderer because it has size properties.
+        newStrip.transform.position = new Vector3(newStrip.transform.position.x - itemWidth, newStrip.transform.position.y, newStrip.transform.position.z); // 
+
+        // Add new strip.
+        strips.Add(newStrip);
     }
 }

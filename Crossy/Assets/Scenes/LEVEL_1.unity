@@ -639,6 +639,9 @@ MonoBehaviour:
   - {fileID: 94549632}
   movingSpeed: 30
   jumpHeightIncrement: 20
+  poolOfStripsPrefabs:
+  - {fileID: 1994128169154799109, guid: 63b10af5b5717d2459e2fb4e5d81da58, type: 3}
+  - {fileID: 3974606209550666095, guid: d96adc40d6350b5439d4ba598a650bc9, type: 3}
 --- !u!1 &774764362 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 3974606209550666095, guid: d96adc40d6350b5439d4ba598a650bc9,
