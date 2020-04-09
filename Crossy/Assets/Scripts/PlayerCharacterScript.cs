@@ -37,7 +37,7 @@ public class PlayerCharacterScript : MonoBehaviour {
     void Start() {
         // Set initial values.
         isJumping = false;
-        currentIndex = 0;
+        currentIndex = -1;
         jumpOffsetX = 1.5f;
         initialPosition = transform.position.y;
     }
