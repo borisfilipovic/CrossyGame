@@ -109,4 +109,11 @@ public class PlayerCharacterScript : MonoBehaviour {
         // Add new strip.
         strips.Add(newStrip);
     }
+
+    // Check collisions between player and car. This is default Unity method that is called on collision trigger. Enemy must have Rigidbody component attached. Enemy must also have BodCollider with isTrigger checked.
+    private void OnTriggerEnter(Collider other) {
+        if(other.gameObject.tag == "Enemy") {
+            print("Collistion.");
+        }
+    }
 }

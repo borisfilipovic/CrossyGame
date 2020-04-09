@@ -574,6 +574,10 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 100000, guid: 50ae30f047ce9456c954cac5303f1e54, type: 3}
+      propertyPath: m_TagString
+      value: Player
+      objectReference: {fileID: 0}
     - target: {fileID: 400000, guid: 50ae30f047ce9456c954cac5303f1e54, type: 3}
       propertyPath: m_LocalPosition.x
       value: 11.5
@@ -703,6 +707,19 @@ MonoBehaviour:
   - {fileID: 7905443367858137989, guid: c8aed4b2743c10b40a506a7862f30d74, type: 3}
   - {fileID: 6991669054497483662, guid: 9ecea7f8e0d8b6a4898c4a7f7a02efaa, type: 3}
   - {fileID: 5484691870990959545, guid: a36cc2eb817fa1b47af1c335913eae59, type: 3}
+--- !u!65 &709593767
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 709593765}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Size: {x: 20, y: 28, z: 20}
+  m_Center: {x: 0, y: 24, z: -46}
 --- !u!1 &718100413 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 100000, guid: 4dab246abe65143cebe2854213af2251,
