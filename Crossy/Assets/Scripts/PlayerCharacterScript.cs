@@ -24,26 +24,41 @@ public class PlayerCharacterScript : MonoBehaviour {
     public float movingSpeed = 10.0f;
     public float jumpHeightIncrement = 0.0f;
     public GameObject[] poolOfStripsPrefabs;
+    public GameObject mesh;
 
     // Private properties.
+    private bool isDead = false;
+    private bool isPlayingDeathAnimation = false;
     private bool isJumping;
     private int currentIndex;
     private float jumpOffsetX;    
     private float midwayPointX;
     private float initialPosition;
+    private float liveMeshSizeScale;
+    private float deadMeshSizeScale;
     private Vector3 jumpTargetLocation;
 
     // Start is called before the first frame update.
     void Start() {
         // Set initial values.
+        isDead = false;
+        isPlayingDeathAnimation = false;
         isJumping = false;
         currentIndex = -1;
         jumpOffsetX = 1.5f;
+        liveMeshSizeScale = 0.7f;
+        deadMeshSizeScale = 0.02f;
+
         initialPosition = transform.position.y;
     }
 
     // Update is called once per frame.
     void Update() {
+        // If player is dead we should stop the game.
+        if (isDead) {
+            return;
+        }
+
         // Calculate next jump position.
         if (Input.GetMouseButtonDown(0) && !isJumping) {
             calculateNextJumpLocation();
@@ -60,6 +75,11 @@ public class PlayerCharacterScript : MonoBehaviour {
                 // Jumping animation reached final position. Stop animation.
                 isJumping = false;
             }            
+        }
+
+        // Death animation.
+        if (isPlayingDeathAnimation) {
+            UpdateDeathAnimation();
         }
     }
 
@@ -113,7 +133,29 @@ public class PlayerCharacterScript : MonoBehaviour {
     // Check collisions between player and car. This is default Unity method that is called on collision trigger. Enemy must have Rigidbody component attached. Enemy must also have BodCollider with isTrigger checked.
     private void OnTriggerEnter(Collider other) {
         if(other.gameObject.tag == "Enemy") {
-            print("Collistion.");
+            DeathAnimation();
+        }
+    }
+
+    // Death animation.
+    void DeathAnimation() {
+        // Set is playing death animation to true, so whit method will not be called all the time during animation.
+        isPlayingDeathAnimation = true;
+    }
+
+    void UpdateDeathAnimation() {
+        // Animation goal: a. Scale it down, b. Rotate character.
+        // A. Scale it down.
+        if (mesh.transform.localScale.z > deadMeshSizeScale) {
+            mesh.transform.localScale -= new Vector3(0.0f, 0.0f, deadMeshSizeScale);
+        } else {
+            isPlayingDeathAnimation = false;
+            isDead = true;
+        }
+
+        // Rotate character.
+        if (mesh.transform.rotation.eulerAngles.x == 0 || mesh.transform.rotation.eulerAngles.x > 270) {
+            mesh.transform.Rotate(-4.0f, 0.0f, 0.0f);
         }
     }
 }
