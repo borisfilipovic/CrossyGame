@@ -25,6 +25,8 @@ public class PlayerCharacterScript : MonoBehaviour {
     public float jumpHeightIncrement = 0.0f;
     public GameObject[] poolOfStripsPrefabs;
     public GameObject mesh;
+    public GameObject bounaryLeft;
+    public GameObject bounaryRight;
 
     // Private properties.
     private bool isDead = false;
@@ -252,6 +254,11 @@ public class PlayerCharacterScript : MonoBehaviour {
                 jumpTargetLocation = new Vector3(nextStrip.transform.position.x - jumpOffsetX, nextStrip.transform.position.y, transform.position.z);
                 midwayPointX = jumpTargetLocation.x + ((transform.position.x - jumpTargetLocation.x) * 0.5f);
 
+                // Move boundary. We need to calculate the distance that the chicken will travel as it jumps.
+                float distanceUpX = transform.position.x - jumpTargetLocation.x;
+                bounaryLeft.transform.position -= new Vector3(distanceUpX, 0, 0);
+                bounaryRight.transform.position -= new Vector3(distanceUpX, 0, 0);
+
                 // Instantiate new strip right after the last strip.
                 SpawnNewStrip();
                 break;
@@ -272,6 +279,11 @@ public class PlayerCharacterScript : MonoBehaviour {
                 /// Calculate jump target location.
                 jumpTargetLocation = new Vector3(previousStrip.transform.position.x - jumpOffsetX, previousStrip.transform.position.y, transform.position.z);
                 midwayPointX = jumpTargetLocation.x - ((jumpTargetLocation.x - transform.position.x) * 0.5f);
+
+                // Move boundary. We need to calculate the distance that the chicken will travel as it jumps.
+                float distanceDownX = jumpTargetLocation.x - transform.position.x;
+                bounaryLeft.transform.position += new Vector3(distanceDownX, 0, 0);
+                bounaryRight.transform.position += new Vector3(distanceDownX, 0, 0);
 
                 // Rotate player facing down.
                 playerYEulerAngleRotation = 180.0f;                
