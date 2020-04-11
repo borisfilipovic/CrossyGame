@@ -34,12 +34,15 @@ public class PlayerCharacterScript : MonoBehaviour {
     private bool isJumpingLeft;
     private bool isJumpingRight;
     private int currentIndex;
-    private float jumpOffsetX;    
+    private float jumpOffsetX;
+    private float jumpOffsetZ;
     private float midwayPointX;
     private float initialPosition;
+    private float initialZPosition;
     private float liveMeshSizeScale;
     private float deadMeshSizeScale;
     private Vector3 jumpTargetLocation;
+    private enum Direction { up, down, left, right};
 
     // Start is called before the first frame update.
     void Start() {
@@ -52,10 +55,11 @@ public class PlayerCharacterScript : MonoBehaviour {
         isJumpingRight = false;
         currentIndex = -1;
         jumpOffsetX = 1.5f;
+        jumpOffsetZ = 7.0f;
         liveMeshSizeScale = 0.7f;
         deadMeshSizeScale = 0.02f;
-
         initialPosition = transform.position.y;
+        initialZPosition = transform.position.z;
     }
 
     // Update is called once per frame.
@@ -86,12 +90,45 @@ public class PlayerCharacterScript : MonoBehaviour {
                 isJumpingUp = false;
             }
         } else if (isJumpingDown) {
-            // Todo.
+            if (transform.position.x < jumpTargetLocation.x)
+            {
+                // Animate towards final x position.
+                float newXPosition = transform.position.x + (movingSpeed * Time.deltaTime);
+                float newYPosition = newXPosition < midwayPointX ? transform.position.y + jumpHeightIncrement * Time.deltaTime : transform.position.y - jumpHeightIncrement * Time.deltaTime;
+                transform.position = new Vector3(newXPosition, Mathf.Max(newYPosition, initialPosition), transform.position.z);
+            }
+            else
+            {
+                // Jumping animation reached final position. Stop animation.
+                isJumpingDown = false;
+            }
         } else if (isJumpingLeft) {
-            // Todo.
+            if (transform.position.z > jumpTargetLocation.z)
+            {
+                // Animate towards final x position.
+                float newZPosition = transform.position.z - (movingSpeed * Time.deltaTime);
+                float newYPosition = newZPosition > midwayPointX ? transform.position.y + jumpHeightIncrement * Time.deltaTime : transform.position.y - jumpHeightIncrement * Time.deltaTime;     
+                transform.position = new Vector3(transform.position.x, Mathf.Max(newYPosition, initialPosition), newZPosition);
+            }
+            else
+            {
+                // Jumping animation reached final position. Stop animation.
+                isJumpingLeft = false;
+            }
         }
         else if (isJumpingRight) {
-            // Todo.
+            if (transform.position.z < jumpTargetLocation.z)
+            {
+                // Animate towards final x position.
+                float newZPosition = transform.position.z + (movingSpeed * Time.deltaTime);
+                float newYPosition = newZPosition < midwayPointX ? transform.position.y + jumpHeightIncrement * Time.deltaTime : transform.position.y - jumpHeightIncrement * Time.deltaTime;
+                transform.position = new Vector3(transform.position.x, Mathf.Max(newYPosition, initialPosition), newZPosition);
+            }
+            else
+            {
+                // Jumping animation reached final position. Stop animation.
+                isJumpingRight = false;
+            }
         }
 
         // Death animation.
@@ -153,62 +190,114 @@ public class PlayerCharacterScript : MonoBehaviour {
     // Swipe gestures.
     void SwipeUp() {
         // Move character up.
-        JumpUp();
+        if (!isJumpingUp) {
+            isJumpingUp = true;
+            jump(Direction.up);
+        }
         print("Consuming up");
     }
 
     void SwipeDown() {
-        // Move character down.
-        JumpDown();
+        // Move character down.        
+        if (!isJumpingDown)
+        {
+            isJumpingDown = true;
+            jump(Direction.down);
+        }        
         print("Consuming down");
     }
 
     void SwipeLeft() {
         // Move character left.
-        JumpLeft();
+        if (!isJumpingLeft)
+        {
+            isJumpingLeft = true;
+            jump(Direction.left);
+        }        
         print("Consuming left");
     }
 
     void SwipeRight() {
         // Move character right.
-        JumpRight();
+        if (!isJumpingRight)
+        {
+            isJumpingRight = true;
+            jump(Direction.right);
+        }        
         print("Consuming right");
     }
 
-    // Jump animations.
-    private void JumpUp() {
-        // Set isJumping flag to true so we prevent multiple jumping.
-        isJumpingUp = true;
-
-        // Increment current index.
-        currentIndex += 1;
-
-        // Check index out of bound.
-        if (strips.Count <= currentIndex)
+    // Jump up or down.
+    private void jump(Direction direction)
+    {
+        float playerYEulerAngleRotation = 0.0f;
+        switch (direction)
         {
-            print("Index is out of bound. Current selected Index: " + currentIndex);
-            isJumpingUp = false; // Reset isJumping flag.
-            return;
+            case Direction.up:
+                // Increment current index.
+                currentIndex += 1;
+
+                // Check index out of bound.
+                if (strips.Count <= currentIndex)
+                {
+                    print("Index is out of bound. Current selected Index: " + currentIndex);
+                    isJumpingUp = false; // Reset isJumping flag.
+                    return;
+                }
+
+                // Get strip at the current index.
+                GameObject nextStrip = strips[currentIndex] as GameObject;
+
+                /// Calculate jump target location.
+                jumpTargetLocation = new Vector3(nextStrip.transform.position.x - jumpOffsetX, nextStrip.transform.position.y, transform.position.z);
+                midwayPointX = jumpTargetLocation.x + ((transform.position.x - jumpTargetLocation.x) * 0.5f);
+
+                // Instantiate new strip right after the last strip.
+                SpawnNewStrip();
+                break;
+            case Direction.down:
+                // Decrement current index for one step.
+                currentIndex -= 1;
+
+                // Check if we are at the begining already. If so, than just return since playor cannot go back.
+                if (currentIndex < 0)
+                {
+                    currentIndex = 0;
+                    return;
+                }
+
+                // Get strip at the current index.
+                GameObject previousStrip = strips[currentIndex] as GameObject;
+
+                /// Calculate jump target location.
+                jumpTargetLocation = new Vector3(previousStrip.transform.position.x - jumpOffsetX, previousStrip.transform.position.y, transform.position.z);
+                midwayPointX = jumpTargetLocation.x - ((jumpTargetLocation.x - transform.position.x) * 0.5f);
+
+                // Rotate player facing down.
+                playerYEulerAngleRotation = 180.0f;                
+                break;
+            case Direction.left:
+                /// Calculate jump target location.
+                jumpTargetLocation = new Vector3(transform.position.x, transform.position.y, transform.position.z - jumpOffsetZ);
+                midwayPointX = jumpTargetLocation.z - ((jumpTargetLocation.z - transform.position.z) * 0.5f);
+
+                // Rotate player facing left.
+                playerYEulerAngleRotation = -90.0f;
+                break;
+            case Direction.right:
+                /// Calculate jump target location.
+                jumpTargetLocation = new Vector3(transform.position.x, transform.position.y, transform.position.z + jumpOffsetZ);
+                midwayPointX = jumpTargetLocation.z + ((transform.position.z - jumpTargetLocation.z) * 0.5f);
+
+                // Rotate player facing left.
+                playerYEulerAngleRotation = 90.0f;
+                break;
+            default:
+                print("Un handeled case.");
+                break;
         }
 
-        // Get strip at the current index.
-        GameObject nextStrip = strips[currentIndex] as GameObject;
-
-        // Get x position of next strip.
-        jumpTargetLocation = new Vector3(nextStrip.transform.position.x - jumpOffsetX, nextStrip.transform.position.y, transform.position.z);
-        midwayPointX = jumpTargetLocation.x + ((transform.position.x - jumpTargetLocation.x) * 0.5f);
-
-        // Instantiate new strip right after the last strip.
-        SpawnNewStrip();
-    }
-
-    private void JumpDown()
-    {
-    }
-
-    private void JumpLeft() {
-    }
-
-    private void JumpRight() {      
+        // Rotate player towards moving direction.
+        mesh.transform.localEulerAngles = new Vector3(0.0f, playerYEulerAngleRotation, 0.0f);
     }
 }
