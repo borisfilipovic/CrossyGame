@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class PlayerCharacterScript : MonoBehaviour {
 
@@ -27,6 +28,8 @@ public class PlayerCharacterScript : MonoBehaviour {
     public GameObject mesh;
     public GameObject bounaryLeft;
     public GameObject bounaryRight;
+    public GameObject StartPanel;
+    public Text scoreText;
 
     // Private properties.
     private bool isDead = false;
@@ -35,6 +38,7 @@ public class PlayerCharacterScript : MonoBehaviour {
     private bool isJumpingDown;
     private bool isJumpingLeft;
     private bool isJumpingRight;
+    private bool gameIsPlaying = false;
     private int currentIndex;
     private float jumpOffsetX;
     private float jumpOffsetZ;
@@ -45,6 +49,8 @@ public class PlayerCharacterScript : MonoBehaviour {
     private float deadMeshSizeScale;
     private Vector3 jumpTargetLocation;
     private enum Direction { up, down, left, right};
+    private int score = 0;
+    private int indexOfTheHighestRoadStrip = 0;
 
     // Start is called before the first frame update.
     void Start() {
@@ -55,11 +61,14 @@ public class PlayerCharacterScript : MonoBehaviour {
         isJumpingDown = false;
         isJumpingLeft = false;
         isJumpingRight = false;
+        gameIsPlaying = false;
         currentIndex = -1;
         jumpOffsetX = 1.5f;
         jumpOffsetZ = 7.0f;
         liveMeshSizeScale = 0.7f;
         deadMeshSizeScale = 0.02f;
+        score = 0;
+        indexOfTheHighestRoadStrip = 0;
         initialPosition = transform.position.y;
         initialZPosition = transform.position.z;
     }
@@ -67,14 +76,9 @@ public class PlayerCharacterScript : MonoBehaviour {
     // Update is called once per frame.
     void Update() {
         // If player is dead we should stop the game.
-        if (isDead) {
+        if (isDead || !gameIsPlaying) {
             return;
         }
-
-        // Calculate next jump position.
-        /*if (Input.GetMouseButtonDown(0) && !isJumpingUp) {
-            JumpUp();
-        }*/
 
         // Smooth jumping calculation.
         if (isJumpingUp)
@@ -162,8 +166,13 @@ public class PlayerCharacterScript : MonoBehaviour {
 
     // Check collisions between player and car. This is default Unity method that is called on collision trigger. Enemy must have Rigidbody component attached. Enemy must also have BodCollider with isTrigger checked.
     private void OnTriggerEnter(Collider other) {
-        if(other.gameObject.tag == "Enemy") {
+        
+        if(other.gameObject.tag == PlayerPrefsController.ENEMY_TAG) {
             DeathAnimation();
+        }
+        if (other.gameObject.tag == PlayerPrefsController.OBSTACLE_TAG)
+        {
+            UserHitObstacle();
         }
     }
 
@@ -172,6 +181,33 @@ public class PlayerCharacterScript : MonoBehaviour {
         // Set is playing death animation to true, so whit method will not be called all the time during animation.
         isPlayingDeathAnimation = true;
     }
+
+    // User hit obstacle.
+    private void UserHitObstacle()
+    {
+        float offsetHorizontal = 0.0f; // Up, Down.
+        float offsetVertical = 0.0f; // Left, right.
+        if (isJumpingDown)
+        {
+            offsetHorizontal = -2.0f;
+        }
+        else if (isJumpingUp)
+        {
+            offsetHorizontal = -2.0f;
+        }
+        else if (isJumpingRight)
+        {
+            offsetHorizontal = 2.0f;
+        }
+        else if (isJumpingRight)
+        {
+            offsetVertical = -2.0f;
+        }
+        // Set new position.
+        transform.position = new Vector3(transform.position.x + offsetHorizontal, initialPosition, transform.position.z + offsetVertical);
+        isJumpingUp = isJumpingDown = isJumpingLeft = isJumpingRight = false;
+    }
+
 
     void UpdateDeathAnimation() {
         // Animation goal: a. Scale it down, b. Rotate character.
@@ -232,6 +268,12 @@ public class PlayerCharacterScript : MonoBehaviour {
     // Jump up or down.
     private void jump(Direction direction)
     {
+        // Check if game is playing or is ended or player is dead.
+        if (isDead || !gameIsPlaying)
+        {
+            return;
+        }
+
         float playerYEulerAngleRotation = 0.0f;
         switch (direction)
         {
@@ -245,6 +287,14 @@ public class PlayerCharacterScript : MonoBehaviour {
                     print("Index is out of bound. Current selected Index: " + currentIndex);
                     isJumpingUp = false; // Reset isJumping flag.
                     return;
+                }
+
+                // Increase score.
+                if (currentIndex > indexOfTheHighestRoadStrip)
+                {
+                    score += 1;
+                    scoreText.text = "Score: " + score.ToString();
+                    indexOfTheHighestRoadStrip = currentIndex;
                 }
 
                 // Get strip at the current index.
@@ -305,11 +355,22 @@ public class PlayerCharacterScript : MonoBehaviour {
                 playerYEulerAngleRotation = 90.0f;
                 break;
             default:
-                print("Un handeled case.");
+                print("Unhandeled case.");
                 break;
         }
 
         // Rotate player towards moving direction.
         mesh.transform.localEulerAngles = new Vector3(0.0f, playerYEulerAngleRotation, 0.0f);
+    }
+
+    // Start game button pressed by user.
+    void ButtonStartPressed()
+    {
+        // Start game.
+        gameIsPlaying = true;
+
+        // Remove or hide menu panel.
+        StartPanel.active = false;
+
     }
 }
